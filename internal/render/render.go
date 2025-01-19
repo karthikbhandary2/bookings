@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 
 	"github.com/justinas/nosurf"
-	"github.com/karthikbhandary2/bookings/pkg/config"
-	"github.com/karthikbhandary2/bookings/pkg/models"
+	"github.com/karthikbhandary2/bookings/internal/config"
+	"github.com/karthikbhandary2/bookings/internal/models"
 )
 
 var functions = template.FuncMap{}

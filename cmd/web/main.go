@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/karthikbhandary2/bookings/pkg/config"
-	"github.com/karthikbhandary2/bookings/pkg/handlers"
-	"github.com/karthikbhandary2/bookings/pkg/render"
+	"github.com/karthikbhandary2/bookings/internal/config"
+	"github.com/karthikbhandary2/bookings/internal/handlers"
+	"github.com/karthikbhandary2/bookings/internal/render"
 	"fmt"
 	"github.com/alexedwards/scs/v2"
 	"log"
