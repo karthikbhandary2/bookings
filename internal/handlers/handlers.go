@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	"github.com/karthikbhandary2/bookings/internal/config"
+	"github.com/karthikbhandary2/bookings/internal/forms"
 	"github.com/karthikbhandary2/bookings/internal/models"
 	"github.com/karthikbhandary2/bookings/internal/render"
 )
@@ -36,7 +37,7 @@ func (m *Repository) Home(w http.ResponseWriter, r *http.Request) {
 	remoteIP := r.RemoteAddr
 	m.App.Session.Put(r.Context(), "remote_ip", remoteIP)
 
-	render.RenderTemplate(w, r, "home.page.tmpl",  &models.TemplateData{})
+	render.RenderTemplate(w, r, "home.page.tmpl", &models.TemplateData{})
 }
 
 // About is the handler for the about page
@@ -55,7 +56,44 @@ func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
 }
 
 func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
-	render.RenderTemplate(w, r, "make-reservations.page.tmpl", &models.TemplateData{})
+	var emptyReservation models.Reservation
+	data := make(map[string]interface{})
+	data["reservation"] = emptyReservation
+
+	render.RenderTemplate(w, r, "make-reservations.page.tmpl", &models.TemplateData{
+		Form: forms.New(nil),
+		Data: data,
+	})
+}
+
+func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	reservation := models.Reservation{
+		FirstName: r.Form.Get("first_name"),
+		LastName:  r.Form.Get("last_name"),
+		Email:     r.Form.Get("email"),
+		Phone:     r.Form.Get("phone"),
+	}
+
+	form := forms.New(r.PostForm)
+
+	form.Required("first_name", "last_name", "email")
+	form.MinLength("first_name", 3, r)
+	form.IsEmail("email")
+	if !form.Valid() {
+		data := make(map[string]interface{})
+		data["reservation"] = reservation
+		render.RenderTemplate(w, r, "make-reservations.page.tmpl", &models.TemplateData{
+			Form: form,
+			Data: data,
+		})
+		return
+	}
 }
 
 func (m *Repository) Generals(w http.ResponseWriter, r *http.Request) {
@@ -77,16 +115,17 @@ func (m *Repository) PostAvailability(w http.ResponseWriter, r *http.Request) {
 }
 
 type jsonresponse struct {
-	OK bool `json:"ok"`
+	OK      bool   `json:"ok"`
 	Message string `json:"message"`
 }
+
 func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 	resp := jsonresponse{
-		OK: true,
+		OK:      true,
 		Message: "Available",
 	}
 
-	out, err := json.MarshalIndent(resp, "","     ")
+	out, err := json.MarshalIndent(resp, "", "     ")
 	if err != nil {
 		log.Println(err)
 	}
