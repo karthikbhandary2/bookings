@@ -32,6 +32,17 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="start-date">Start Date:</label>
+                        <input class="form-control" id="start-date" type='date' name='start-date'>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="end-date">End Date:</label>
+                        <input class="form-control" id="end-date" type='date' name='end-date'>
+                    </div>
+
+                    <input type="hidden" name="room_id" value="2">
+                    <div class="form-group">
                         <label for="email">Email:</label>
                         {{with .Form.Errors.Get "email"}}
                             <label class="text-danger">{{.}}</label>
