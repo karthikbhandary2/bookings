@@ -3,6 +3,7 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -35,6 +36,13 @@ func NewRepo(a *config.AppConfig, db *drivers.DB) *Repository {
 	}
 }
 
+func NewTestRepo(a *config.AppConfig) *Repository {
+	return &Repository{
+		App: a,
+		DB:  dbrepo.NewTestingRepo(a),
+	}
+}
+
 // NewHandlers sets the repository for the handlers
 func NewHandlers(r *Repository) {
 	Repo = r
@@ -55,13 +63,15 @@ func (m *Repository) About(w http.ResponseWriter, r *http.Request) {
 func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 	res, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
 	if !ok {
-		helpers.ServerError(w, errors.New("Can't get reservation from session"))
+		m.App.Session.Put(r.Context(), "error", "Can't get reservation from session")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 
 	room, err := m.DB.GetRoomById(res.RoomID)
 	if err != nil {
-		helpers.ServerError(w, err)
+		m.App.Session.Put(r.Context(), "error", "Can't find room")
+		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
 	res.Room.RoomName = room.RoomName
@@ -169,6 +179,38 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		helpers.ServerError(w, err)
 		return
 	}
+
+	//send notification - first to guest
+	htmlMessage := fmt.Sprintf(`
+	<strong>Reservation Confirmation</strong><br>
+	Dear %s,<br>
+	This is to confirm your reservation from %s to %s.
+	`, res.FirstName, res.StartDate.Format("2006-01-02"),res.EndDate.Format("2006-01-02"))
+
+	msg := models.MailData{
+		To:      res.Email,
+		From:    "me@here.com",
+		Subject: "Reservation Confirmation",
+		Content: htmlMessage,
+		Template: "basic.html",
+	}
+	m.App.MailChan <- msg
+
+	//send notification - to property owner
+	htmlMessage = fmt.Sprintf(`
+	<strong>Reservation Confirmation</strong><br>
+	Dear %s,<br>
+	A reservation has been made from %s to %s.
+	`, res.FirstName, res.StartDate.Format("2006-01-02"),res.EndDate.Format("2006-01-02"))
+
+	msg = models.MailData{
+		To: "me@here.com",
+		From: "me@here.com",
+		Subject: "Reservation Confirmation",
+		Content: htmlMessage,
+		Template: "basic.html",
+	}
+	m.App.MailChan <- msg
 	m.App.Session.Put(r.Context(), "reservation", res)
 	http.Redirect(w, r, "/reservation-summary", http.StatusSeeOther)
 }
