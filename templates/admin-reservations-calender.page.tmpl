@@ -10,7 +10,6 @@
     {{$dim := index .IntMap "days_in_month"}}
     {{$curMonth := index .StringMap "this_month"}}
     {{$curYear := index .StringMap "this_month_year"}}
-    {{$src := index .StringMap "src"}}
     <div class="col-md-12">
 
         <div class="text-center">
@@ -19,17 +18,17 @@
 
         <div class="float-start">
             <a class="btn btn-sm btn-outline-secondary"
-               href="/admin/reservations-calendar?y={{index .StringMap "last_month_year"}}&m={{index .StringMap "last_month"}}">&lt;&lt;</a>
+               href="/admin/reservations-calender?y={{index .StringMap "last_month_year"}}&m={{index .StringMap "last_month"}}">&lt;&lt;</a>
         </div>
 
         <div class="float-end">
             <a class="btn btn-sm btn-outline-secondary"
-               href="/admin/reservations-calendar?y={{index .StringMap "next_month_year"}}&m={{index .StringMap "next_month"}}">&gt;&gt;</a>
+               href="/admin/reservations-calender?y={{index .StringMap "next_month_year"}}&m={{index .StringMap "next_month"}}">&gt;&gt;</a>
         </div>
 
         <div class="clearfix"></div>
 
-        <form method="post" action="/admin/reservations-calendar">
+        <form method="post" action="/admin/reservations-calender">
             <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
             <input type="hidden" name="m" value="{{index .StringMap "this_month"}}">
             <input type="hidden" name="y" value="{{index .StringMap "this_month_year"}}">
